@@ -981,26 +981,42 @@ This command works similar to `meow-next-symbol'."
   (forward-line -1)
   (line-beginning-position))
 
+;; Source: https://github.com/meow-edit/meow/issues/547#issue-2108290308
 (defun meow-line (n &optional expand)
   "Select the current line, eol is not included.
 
 Create selection with type (expand . line).
 For the selection with type (expand . line), expand it by line.
-For the selection with other types, cancel it.
+For the other types, change selection type to (expand . line)
+ and grow selection to cover the entire lines
 
 Prefix:
 numeric, repeat times.
 "
   (interactive "p")
-  (let* ((cancel-sel (not (or expand (equal '(expand . line) (meow--selection-type)))))
-         (backward (unless cancel-sel (meow--direction-backward-p)))
-         (orig (if cancel-sel (point) (mark t)))
-         (n (if backward
-                (- n)
-              n))
+  (let* ((orig (mark t))
+         (n (if (meow--direction-backward-p) (- n) n))
          (forward (> n 0)))
     (cond
-     ((not cancel-sel)
+     ((not (region-active-p))
+      (let ((m (if forward
+                   (line-beginning-position)
+                 (line-end-position)))
+            (p (save-mark-and-excursion
+                 (if forward
+                     (progn
+                       (forward-line (1- n))
+                       (line-end-position))
+                   (progn
+                     (forward-line (1+ n))
+                     (when (meow--empty-line-p)
+                       (backward-char 1))
+                     (line-beginning-position))))))
+        (thread-first
+          (meow--make-selection '(expand . line) m p expand)
+          (meow--select))
+        (meow--maybe-highlight-num-positions '(meow--backward-line-1 . meow--forward-line-1))))
+     ((equal '(expand . line) (meow--selection-type))
       (let (p)
         (save-mark-and-excursion
           (forward-line n)
@@ -1013,20 +1029,10 @@ numeric, repeat times.
           (meow--select))
         (meow--maybe-highlight-num-positions '(meow--backward-line-1 . meow--forward-line-1))))
      (t
-      (let ((m (if forward
-                   (line-beginning-position)
-                 (line-end-position)))
-            (p (save-mark-and-excursion
-                 (if forward
-                     (progn
-                       (unless (= n 1)
-                         (forward-line (1- n)))
-                       (line-end-position))
-                   (progn
-                     (forward-line (1+ n))
-                     (when (meow--empty-line-p)
-                       (backward-char 1))
-                     (line-beginning-position))))))
+      (let ((m (save-mark-and-excursion
+                 (goto-char orig)
+                 (if forward (line-beginning-position) (line-end-position))))
+            (p (if forward (line-end-position) (line-beginning-position))))
         (thread-first
           (meow--make-selection '(expand . line) m p expand)
           (meow--select))
