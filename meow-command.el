@@ -317,7 +317,8 @@ This command supports `meow-selection-command-fallback'."
 (defun meow-C-d ()
   "Run command on C-d."
   (interactive)
-  (meow--execute-kbd-macro meow--kbd-delete-char))
+  ;; (meow--execute-kbd-macro meow--kbd-delete-char)
+  (call-interactively #'delete-char))
 
 (defun meow-backward-kill-word (arg)
   "Kill characters backward until the beginning of a `meow-word-thing'.
@@ -678,7 +679,7 @@ Will cancel all other selection, except char selection. "
   (when (and (region-active-p)
              (not (equal '(expand . char) (meow--selection-type))))
     (meow-cancel-selection))
-  (meow--execute-kbd-macro meow--kbd-backward-char))
+  (backward-char))
 
 (defun meow-right ()
   "Move to right.
@@ -692,7 +693,7 @@ Will cancel all other selection, except char selection. "
     (when (or (not meow-use-cursor-position-hack)
               (not ra)
               (equal '(expand . char) (meow--selection-type)))
-      (meow--execute-kbd-macro meow--kbd-forward-char))))
+      (forward-char))))
 
 (defun meow-left-expand ()
   "Activate char selection, then move left."
@@ -706,7 +707,7 @@ Will cancel all other selection, except char selection. "
     (thread-first
       (meow--make-selection '(expand . char) (point) (point))
       (meow--select)))
-  (meow--execute-kbd-macro meow--kbd-backward-char))
+  (backward-char))
 
 (defun meow-right-expand ()
   "Activate char selection, then move right."
@@ -718,7 +719,7 @@ Will cancel all other selection, except char selection. "
     (thread-first
       (meow--make-selection '(expand . char) (point) (point))
       (meow--select)))
-  (meow--execute-kbd-macro meow--kbd-forward-char))
+  (forward-char))
 
 (defun meow-prev (arg)
   "Move to the previous line.
