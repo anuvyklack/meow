@@ -200,7 +200,7 @@ Example usage:
   :keymap \\='my-keymap
   (message \"toggled state\"))
 
-Also see meow-register-state, which is used internally by this
+Also see `meow-register-state', which is used internally by this
 function, if you want more control over defining your state. This
 is more helpful if you already have a keymap and defined minor
 mode that you only need to integrate with meow.
